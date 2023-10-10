@@ -28,6 +28,10 @@ class RefBenchmark {
   def javaGetAndUpdate(): Unit =
     run(RefBenchmark.javaGetAndUpdate(_.inc))
 
+  @Benchmark
+  def nop(): Unit =
+    run(RefBenchmark.nop(_.inc))
+
 }
 object RefBenchmark {
 
@@ -36,8 +40,11 @@ object RefBenchmark {
   case class Wrapper(value: Int) {
     def inc: Wrapper = this.copy(value = value + 1)
   }
+  object Wrapper {
+    val empty: Wrapper = Wrapper(0)
+  }
 
-  val ar: AtomicReference[Wrapper] = new AtomicReference(Wrapper(0));
+  val ar: AtomicReference[Wrapper] = new AtomicReference(Wrapper.empty);
 
   def strongGetAndUpdate(f: A => A): IO[A] = {
     @tailrec
@@ -63,5 +70,9 @@ object RefBenchmark {
 
   def javaGetAndUpdate(f: A => A): IO[A] =
     IO.delay(ar.getAndUpdate(a => f(a)))
+
+  def nop(f: A => A): IO[A] = {
+    IO.delay(f(Wrapper.empty))
+  }
 
 }
